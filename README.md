@@ -24,6 +24,7 @@
    > 页面显示二维码时，**不要直接点击 Continue**。请点击二维码下方的蓝色小字 **"Setup Key"**（或 "enter this text code"）。
 6. **复制显示的字符串密钥**（通常是 16 位字母数字组合）。
    * *注意：同时也请用手机验证器 App (如 Google Auth) 扫描二维码或输入密钥，以完成 GitHub 的验证流程。*
+7.**记得把Preferred 2FA method选为Authenticator App，否则脚本不生效**
 
 ### 第三步：配置 GitHub Secrets
 为了保护您的账号安全，请将敏感信息存储在仓库的 Secrets 中。
