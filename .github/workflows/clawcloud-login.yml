@@ -1,45 +1,44 @@
-# 文件名: .github/workflows/clawcloud-login.yml
-name: ClawCloud Run Auto Login (2FA Support)
+name: ClawCloud 自动登录保活
 
 on:
   schedule:
-    - cron: '0 0 */10 * *'
+    - cron: '0 1 */5 * *'  # UTC 1:00，每5天运行
   workflow_dispatch:
 
 jobs:
   auto-login:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: 检出代码
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: 设置 Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
-      - name: Install Dependencies
+      - name: 安装依赖
         run: |
-          python -m pip install --upgrade pip
-          # 👇 修改点 1: 这里增加了 requests 库，否则脚本发不出去通知会报错
-          pip install playwright pyotp requests
+          pip install playwright requests pynacl
           playwright install chromium
+          playwright install-deps
 
-      - name: Run Login Script
+      - name: 运行自动登录
         env:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_PASSWORD: ${{ secrets.GH_PASSWORD }}
-          GH_2FA_SECRET: ${{ secrets.GH_2FA_SECRET }}
-          # 👇 修改点 2: 注入 Telegram 的 Secrets 变量
+          GH_SESSION: ${{ secrets.GH_SESSION }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+          
+        run: python scripts/auto_login.py
         
-        run: python -u login_script.py
-
-      - name: Upload Debug Screenshot
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: login-result
-          path: login_result.png
+      - name: Keepalive Workflow
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit --allow-empty -m "Chore: Keep-alive [skip ci]"
+          git push || echo "No changes to push"
